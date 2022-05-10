@@ -14,6 +14,10 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
+dockers:
+  - image_templates:
+      - "ghcr.io/zooper-corp/mooncli:{{ .Tag }}"
+      - "ghcr.io/zooper-corp/mooncli:latest"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
