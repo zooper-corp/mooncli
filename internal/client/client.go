@@ -34,10 +34,10 @@ func NewClient(config config.ChainConfig) (*Client, error) {
 	return NewClientWithExternalCache(config, mcache.New())
 }
 
-func NewClientWithExternalCache(config config.ChainConfig, cache *mcache.CacheDriver) (*Client, error) {
+func NewClientWithExternalCache(cfg config.ChainConfig, cache *mcache.CacheDriver) (*Client, error) {
 	c := new(Client)
 	c.cache = cache
-	c.RpcUrl = config.RpcUrl()
+	c.RpcUrl = cfg.RpcUrl()
 	// Create client first
 	api, err := gsrpc.NewSubstrateAPI(c.RpcUrl)
 	if err != nil {
@@ -50,23 +50,13 @@ func NewClientWithExternalCache(config config.ChainConfig, cache *mcache.CacheDr
 		return c, err
 	}
 	c.metadata = meta
-	// Decoder metadata
-	var hexMetadata string
-	err = client.CallWithBlockHash(api.Client, &hexMetadata, "state_getMetadata", nil)
+	// Load generic decoder first
+	err = c.registerDecoder(cfg)
 	if err != nil {
 		return c, err
 	}
-	metaDecoder := scalecodec.MetadataDecoder{}
-	metaDecoder.Init(utiles.HexToBytes(hexMetadata))
-	_ = metaDecoder.Process()
-	customType, err := config.ReadSpecs()
-	if err != nil {
-		return c, err
-	}
-	types2.RegCustomTypes(source.LoadTypeRegistry(customType))
-	c.decoder = metaDecoder
 	// Get snap
-	snap, err := fetchSnapBlock(c, config.Snap.TargetBlock, config.Snap.TargetRound)
+	snap, err := fetchSnapBlock(c, cfg.Snap.TargetBlock, cfg.Snap.TargetRound)
 	if err != nil {
 		return c, err
 	}
@@ -85,6 +75,12 @@ func NewClientWithExternalCache(config config.ChainConfig, cache *mcache.CacheDr
 		return c, err
 	}
 	c.SpecVersion = int(version.SpecVersion)
+	// Reload decoder
+	cfg.NetworkSpecsVersion = uint32(version.SpecVersion)
+	err = c.registerDecoder(cfg)
+	if err != nil {
+		return c, err
+	}
 	// Get token info
 	tokenInfo, err := fetchTokenInfo(c)
 	if err != nil {
@@ -100,6 +96,26 @@ func NewClientWithExternalCache(config config.ChainConfig, cache *mcache.CacheDr
 		c.SnapBlock.Hash.Hex(),
 	)
 	return c, nil
+}
+
+func (c *Client) registerDecoder(cfg config.ChainConfig) error {
+	log.Printf("Loading decoder %v.%v", cfg.NetworkSpecs, cfg.NetworkSpecsVersion)
+	// Decoder metadata
+	var hexMetadata string
+	err := client.CallWithBlockHash(c.api.Client, &hexMetadata, "state_getMetadata", nil)
+	if err != nil {
+		return err
+	}
+	metaDecoder := scalecodec.MetadataDecoder{}
+	metaDecoder.Init(utiles.HexToBytes(hexMetadata))
+	_ = metaDecoder.Process()
+	customType, err := cfg.ReadSpecs()
+	if err != nil {
+		return err
+	}
+	types2.RegCustomTypes(source.LoadTypeRegistry(customType))
+	c.decoder = metaDecoder
+	return nil
 }
 
 func (c *Client) GetBlockNumber(hash types.Hash) (uint64, error) {

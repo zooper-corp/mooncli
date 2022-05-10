@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/zooper-corp/mooncli/config"
-	"github.com/zooper-corp/mooncli/internal/display"
+	"github.com/zooper-corp/mooncli/internal/tools"
 	"testing"
 )
 
@@ -15,8 +15,8 @@ func TestFetchDelegatorInfo(t *testing.T) {
 		"0x4b5788f50e44e593c7bd92eb66fa59600baa9432",
 	)
 	if err != nil {
-		t.Logf("Client: %v", display.DumpJson(c.SnapBlock))
-		t.Logf("Go history: %v", display.DumpJson(delegator))
+		t.Logf("Client: %v", tools.DumpJson(c.SnapBlock))
+		t.Logf("Go history: %v", tools.DumpJson(delegator))
 		t.Errorf("error %v\n", err)
 	}
 }
@@ -30,9 +30,29 @@ func TestClient_FetchDelegatorState(t *testing.T) {
 		"0x728507eC8f967BCB5fAFF3D238059cE1eb99b828",
 	)
 	if err != nil {
-		t.Logf("Client: %v", display.DumpJson(c.SnapBlock))
-		t.Logf("Go history: %v", display.DumpJson(delegator))
+		t.Logf("Client: %v", tools.DumpJson(c.SnapBlock))
+		t.Logf("Go delegator: %v", tools.DumpJson(delegator))
 		t.Errorf("error %v\n", err)
+	}
+}
+
+func TestClient_FetchDelegatorStateV1500(t *testing.T) {
+	cfg := config.GetChainConfig("moonbase", 2132368, 0)
+	cfg.Snap.TargetBlock = 2132368
+	c, _ := NewClient(cfg)
+	delegator, err := c.FetchDelegatorState(
+		"0x7aF6c67EE0F1eC83C3d05e62fB0200B3841c7F36",
+		"0xB1e6c73EA591C3d1cE112f428B33850E7158fe22",
+	)
+	if err != nil {
+		t.Logf("Client: %v", tools.DumpJson(c.SnapBlock))
+		t.Logf("Go delegator: %v", tools.DumpJson(delegator))
+		t.Errorf("error %v\n", err)
+	}
+	if delegator.RevokeRound != 2885 {
+		t.Logf("Client: %v", tools.DumpJson(c.SnapBlock))
+		t.Logf("Go history: %v", tools.DumpJson(delegator))
+		t.Errorf("expected revoke round 2885 got %v\n", delegator.RevokeRound)
 	}
 }
 

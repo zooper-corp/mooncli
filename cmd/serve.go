@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/zooper-corp/mooncli/config"
-	"github.com/zooper-corp/mooncli/internal/display"
 	"github.com/zooper-corp/mooncli/internal/server"
+	"github.com/zooper-corp/mooncli/internal/tools"
 	"log"
 	"time"
 )
@@ -22,7 +22,7 @@ var serveCmd = &cobra.Command{
 			UpdateInterval: time.Duration(interval) * time.Second,
 			ChainConfig:    config.GetChainConfig(chain, 0, 0),
 		}
-		log.Printf("Starting API server %v", display.DumpJson(httpConfig))
+		log.Printf("Starting API server %v", tools.DumpJson(httpConfig))
 		server.ServeChainData(httpConfig)
 	},
 }

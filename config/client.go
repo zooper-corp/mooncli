@@ -19,7 +19,8 @@ type ChainConfig struct {
 	DialTimeout      time.Duration
 	SubscribeTimeout time.Duration
 	// Json folders
-	NetworkSpecs string
+	NetworkSpecs        string
+	NetworkSpecsVersion uint32
 }
 
 type SnapConfig struct {
@@ -55,14 +56,18 @@ func GetChainConfig(
 			TargetBlock: block,
 			TargetRound: round,
 		},
-		DialTimeout:      10 * time.Second,
-		SubscribeTimeout: 5 * time.Second,
-		NetworkSpecs:     "moonbeam",
+		DialTimeout:         10 * time.Second,
+		SubscribeTimeout:    5 * time.Second,
+		NetworkSpecs:        "moonbeam",
+		NetworkSpecsVersion: 1300,
 	}
 }
 
 // ReadSpecs will read network specification from the embedded file
 func (cg *ChainConfig) ReadSpecs() ([]byte, error) {
+	if cg.NetworkSpecsVersion >= 1500 {
+		return networkSpecs.ReadFile(fmt.Sprintf("specs/%v.1500.json", cg.NetworkSpecs))
+	}
 	return networkSpecs.ReadFile(fmt.Sprintf("specs/%v.json", cg.NetworkSpecs))
 }
 

@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/zooper-corp/mooncli/config"
-	"github.com/zooper-corp/mooncli/internal/display"
+	"github.com/zooper-corp/mooncli/internal/tools"
 	"math/big"
 	"strings"
 	"testing"
@@ -17,8 +17,8 @@ func TestClient_FetchSortedCandidatePool(t *testing.T) {
 		t.Errorf("error %v\n", err)
 	}
 	if len(pool) != 77 {
-		t.Logf("Client: %v", display.DumpJson(c.SnapBlock))
-		t.Logf("Got pool: %v", display.DumpJson(pool))
+		t.Logf("Client: %v", tools.DumpJson(c.SnapBlock))
+		t.Logf("Got pool: %v", tools.DumpJson(pool))
 		t.Errorf("got pool size %v != 76\n", len(pool))
 	}
 	// Check test collator amount
@@ -42,7 +42,7 @@ func TestClient_GetCandidateBondLessDelay(t *testing.T) {
 	c, _ := NewClient(cfg)
 	delay, err := c.GetCandidateBondLessDelay()
 	if delay <= 0 {
-		t.Logf("Client: %v", display.DumpJson(c.SnapBlock))
+		t.Logf("Client: %v", tools.DumpJson(c.SnapBlock))
 		t.Errorf("got delay %v != 0 err:%v\n", delay, err)
 	}
 }
@@ -56,8 +56,8 @@ func TestClient_FetchCollatorHistory(t *testing.T) {
 		t.Errorf("error %v\n", err)
 	}
 	if history[446].Blocks == 0 {
-		t.Logf("Client: %v", display.DumpJson(c.SnapBlock))
-		t.Logf("Go history: %v", display.DumpJson(history))
+		t.Logf("Client: %v", tools.DumpJson(c.SnapBlock))
+		t.Logf("Go history: %v", tools.DumpJson(history))
 		t.Errorf("got 0 blocks, wanted > 0 for %v\n", history[1])
 	}
 }
@@ -73,8 +73,8 @@ func TestClient_FetchCollatorInfo(t *testing.T) {
 		config.DefaultCollatorsPoolConfig(),
 	)
 	if err != nil {
-		t.Logf("Client: %v", display.DumpJson(c.SnapBlock))
-		t.Logf("Go history: %v", display.DumpJson(collator))
+		t.Logf("Client: %v", tools.DumpJson(c.SnapBlock))
+		t.Logf("Go history: %v", tools.DumpJson(collator))
 		t.Errorf("error %v\n", err)
 	}
 	e, _ := big.NewInt(0).SetString("1586286471241950000000000", 10)
@@ -103,11 +103,11 @@ func TestClient_FetchRevokes(t *testing.T) {
 	}
 	revoke, ok := collator.Revokes[513]
 	if !ok {
-		t.Logf("Revokes: %v", display.DumpJson(collator.Revokes))
+		t.Logf("Revokes: %v", tools.DumpJson(collator.Revokes))
 		t.Errorf("Expecting revokes at round 500")
 	}
 	if revoke.Amount.Float64() != 2500.0 {
-		t.Logf("Revoke: %v", display.DumpJson(revoke))
+		t.Logf("Revoke: %v", tools.DumpJson(revoke))
 		t.Errorf("Expecting 700 got: %v", collator.Revokes[500].Amount.Balance)
 	}
 }

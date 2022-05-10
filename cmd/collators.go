@@ -6,6 +6,7 @@ import (
 	"github.com/zooper-corp/mooncli/config"
 	"github.com/zooper-corp/mooncli/internal/client"
 	"github.com/zooper-corp/mooncli/internal/display"
+	"github.com/zooper-corp/mooncli/internal/tools"
 	"log"
 )
 
@@ -43,7 +44,7 @@ var collatorsJsonCmd = &cobra.Command{
 			Pool   client.CollatorPool `json:"collator_pool"`
 		}
 		data, client := fetchPool(cmd)
-		fmt.Println(display.DumpJson(JsonData{Client: client, Pool: data}))
+		fmt.Println(tools.DumpJson(JsonData{Client: client, Pool: data}))
 	},
 }
 

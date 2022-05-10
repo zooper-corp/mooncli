@@ -6,7 +6,7 @@ import (
 	"github.com/zooper-corp/mooncli/config"
 	"github.com/zooper-corp/mooncli/internal/async"
 	"github.com/zooper-corp/mooncli/internal/client"
-	"github.com/zooper-corp/mooncli/internal/display"
+	"github.com/zooper-corp/mooncli/internal/tools"
 	"log"
 	"sync"
 )
@@ -54,7 +54,7 @@ var infoCmd = &cobra.Command{
 			Metadata: c,
 			Accounts: accounts,
 		}
-		fmt.Println(display.DumpJson(result))
+		fmt.Println(tools.DumpJson(result))
 	},
 }
 
