@@ -8,13 +8,18 @@ builds:
     goos:
       - linux
       - darwin
+    goarch:
+      - amd64
+      - arm64
 archives:
   - format: binary
     format_overrides:
       - goos: windows
         format: zip
 dockers:
-  - image_templates:
+  - goos: linux
+    goarch: amd64
+    image_templates:
       - "ghcr.io/zooper-corp/mooncli:{{ .Tag }}"
       - "ghcr.io/zooper-corp/mooncli:latest"
 checksum:
