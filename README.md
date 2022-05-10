@@ -1,5 +1,6 @@
 # MoonCli
-A small set of useful console tools for the moonbeam chains
+A small set of useful console tools for the moonbeam chains proudly made by 🛸 Zooper Corp 🛸, if you like this tool 
+consider nominating our collator :)
 
 ### Chain info
 Show chain state at a given block or round, for example we can get chain status 20 blocks before round 512 started using this command.

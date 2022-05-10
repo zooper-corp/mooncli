@@ -41,6 +41,7 @@ type DelegationData struct {
 }
 
 type ChainInfo struct {
+	Server      string             `json:"server"`
 	Update      ChainUpdate        `json:"update"`
 	Chain       string             `json:"chain"`
 	SpecVersion int                `json:"spec"`
@@ -99,6 +100,7 @@ func (c *ChainData) Update() error {
 		defer c.updateLock.Unlock()
 		updateTime := uint32(time.Now().UnixMilli() - start)
 		c.Info = ChainInfo{
+			Server: "MoonCli by 🛸 Zooper Corp 🛸",
 			Update: ChainUpdate{
 				TsSecs:  float64(start / 1000),
 				LenSecs: float32(updateTime / 1000),
