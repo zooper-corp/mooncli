@@ -3,6 +3,7 @@ package config
 import (
 	"embed"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -66,6 +67,7 @@ func GetChainConfig(
 // ReadSpecs will read network specification from the embedded file
 func (cg *ChainConfig) ReadSpecs() ([]byte, error) {
 	if cg.NetworkSpecsVersion >= 1500 {
+		log.Printf("Loading decoder for spec 1500")
 		return networkSpecs.ReadFile(fmt.Sprintf("specs/%v.1500.json", cg.NetworkSpecs))
 	}
 	return networkSpecs.ReadFile(fmt.Sprintf("specs/%v.json", cg.NetworkSpecs))

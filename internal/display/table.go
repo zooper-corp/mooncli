@@ -6,7 +6,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/zooper-corp/mooncli/config"
 	"github.com/zooper-corp/mooncli/internal/client"
-	"math"
+	"github.com/zooper-corp/mooncli/internal/tools"
 	"os"
 )
 
@@ -78,21 +78,19 @@ func DumpTable(data client.CollatorPool, client *client.Client, options config.T
 	revokeRound := data.RoundNumber + options.RevokeRounds
 	for _, info := range data.Collators {
 		t.AppendRow(table.Row{
-			info.DisplayName(),
+			tools.ToAscii(info.DisplayName()),
 			info.Rank,
 			info.Selected,
 			// Counted
-			fmt.Sprintf("%vK", math.Round(info.Counted.Float64()/1000)),
+			tools.Humanize(info.Counted.Float64()),
 			// Blocks
 			fmt.Sprintf("%v", info.History[data.RoundNumber].Blocks),
 			fmt.Sprintf("%.1f", info.AverageBlocks()),
 			// Balance
-			fmt.Sprintf("%v", math.Round(info.Balance.Free.Float64())),
+			tools.Humanize(info.Balance.Free.Float64()),
 			// Revokes
-			fmt.Sprintf("%vK", math.Round(info.RevokeAt(revokeRound).Counted.Float64()/1000)),
-			fmt.Sprintf("%vK", math.Round(
-				(info.Counted.Float64()-info.RevokeAt(revokeRound).Counted.Float64())/1000),
-			),
+			tools.Humanize(info.RevokeAt(revokeRound).Counted.Float64()),
+			tools.Humanize(info.Counted.Float64() - info.RevokeAt(revokeRound).Counted.Float64()),
 			fmt.Sprintf("%v", info.Revokes[revokeRound].Rank),
 		})
 	}

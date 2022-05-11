@@ -99,8 +99,6 @@ func NewClientWithExternalCache(cfg config.ChainConfig, cache *mcache.CacheDrive
 }
 
 func (c *Client) registerDecoder(cfg config.ChainConfig) error {
-	log.Printf("Loading decoder %v.%v", cfg.NetworkSpecs, cfg.NetworkSpecsVersion)
-	// Decoder metadata
 	var hexMetadata string
 	err := client.CallWithBlockHash(c.api.Client, &hexMetadata, "state_getMetadata", nil)
 	if err != nil {
