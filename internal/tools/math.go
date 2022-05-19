@@ -20,7 +20,7 @@ func Humanize(v float64) string {
 	case v > math.Pow10(3):
 		return fmt.Sprintf("%.1fK", v/math.Pow10(3))
 	case v > math.Pow10(2):
-		return fmt.Sprintf("%.0f", v/math.Pow10(3))
+		return fmt.Sprintf("%.1f", v)
 	case v == math.Round(v):
 		return fmt.Sprintf("%.0f", v)
 	case v < 1:
