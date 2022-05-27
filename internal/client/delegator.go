@@ -61,13 +61,6 @@ type DelegatorState struct {
 }
 
 func (c *Client) FetchDelegatorState(collator string, address string) (DelegatorState, error) {
-	if c.SpecVersion < 1500 {
-		return c.fetchDelegatorStateV1300(collator, address)
-	}
-	return c.fetchDelegatorStateV1500(collator, address)
-}
-
-func (c *Client) fetchDelegatorStateV1500(collator string, address string) (DelegatorState, error) {
 	delegatorAccount, _ := types.HexDecodeString(address)
 	collatorAccount, _ := types.HexDecodeString(collator)
 	var delegator delegatorStateUnmarshalV1500
@@ -113,53 +106,6 @@ func (c *Client) fetchDelegatorStateV1500(collator string, address string) (Dele
 				revokeAmount = amount
 				break
 			}
-		}
-	}
-	// Ok
-	r := DelegatorState{
-		Address: address,
-		Amount: TokenBalance{
-			info:    &c.TokenInfo,
-			Balance: &TokenAmount{totalDelegated},
-		},
-		RevokeAmount: revokeAmount.AsBalance(&c.TokenInfo),
-		RevokeReason: revokeReason,
-		RevokeRound:  revokeRound,
-	}
-	return r, nil
-}
-
-func (c *Client) fetchDelegatorStateV1300(collator string, address string) (DelegatorState, error) {
-	account, _ := types.HexDecodeString(address)
-	var delegator delegatorStateUnmarshal
-	err := c.GetStorageRaw(
-		"ParachainStaking",
-		"DelegatorState",
-		"DelegatorState<Balance>",
-		&delegator,
-		account,
-	)
-	if err != nil {
-		log.Printf("Unable to decode delegator state for %v\n", address)
-		return DelegatorState{}, err
-	}
-	// Fetch collator relative data
-	totalDelegated := big.NewInt(0)
-	for _, delegation := range delegator.Delegations {
-		if strings.EqualFold(delegation.Owner, collator) {
-			totalDelegated.Add(totalDelegated, delegation.Amount.AsBigInt())
-		}
-	}
-	// Fetch revokes
-	revokeAmount := TokenAmount{big.NewInt(0)}
-	revokeReason := ""
-	revokeRound := uint32(0)
-	for _, request := range delegator.Requests.Requests {
-		if strings.EqualFold(request.Collator, collator) {
-			revokeReason = request.Request.Action.Value()
-			revokeRound = request.Request.Round
-			revokeAmount = request.Request.Amount
-			break
 		}
 	}
 	// Ok

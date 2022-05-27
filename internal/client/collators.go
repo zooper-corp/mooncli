@@ -435,7 +435,7 @@ func (cp *CollatorPool) computeRevokes(firstRound uint32, lastRound uint32) {
 	for round := firstRound; round <= lastRound; round++ {
 		roundPool := make([]sortEntry, 0)
 		// First we compute new total
-		for i, _ := range cp.Collators {
+		for i := range cp.Collators {
 			if cp.Collators[i].Revokes == nil {
 				cp.Collators[i].Revokes = make(map[uint32]RevokeRound)
 			}

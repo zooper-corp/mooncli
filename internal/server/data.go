@@ -76,7 +76,7 @@ func (c *ChainData) Update() error {
 			return err
 		}
 		// Fetch collator pool
-		log.Printf("Fetching collator pool")
+		log.Printf("Fetching collator pool history:%v revokes:%v\n", 28, true)
 		collatorPool, err := chainClient.FetchCollatorPool(config.CollatorsPoolConfig{
 			HistoryRounds: 28,
 			Revokes:       true,
