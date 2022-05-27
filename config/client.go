@@ -59,7 +59,7 @@ func GetChainConfig(
 		DialTimeout:         10 * time.Second,
 		SubscribeTimeout:    5 * time.Second,
 		NetworkSpecs:        "moonbeam.1502",
-		NetworkSpecsVersion: 1300,
+		NetworkSpecsVersion: 1502,
 	}
 }
 
