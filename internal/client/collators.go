@@ -166,8 +166,6 @@ func (c *Client) FetchCollatorPool(poolConfig config.CollatorsPoolConfig) (Colla
 	if err != nil {
 		return CollatorPool{}, err
 	}
-	// Get details
-	ch := make(chan async.Result[CollatorInfo])
 	// Get fetch list
 	addresses := make([]string, 0)
 	for _, poolEntry := range pool {
@@ -176,6 +174,8 @@ func (c *Client) FetchCollatorPool(poolConfig config.CollatorsPoolConfig) (Colla
 		}
 	}
 	// Query storage
+	log.Printf("Fetching %v collators info", len(addresses))
+	ch := make(chan async.Result[CollatorInfo])
 	var wg sync.WaitGroup
 	for _, address := range addresses {
 		wg.Add(1)
@@ -196,11 +196,15 @@ func (c *Client) FetchCollatorPool(poolConfig config.CollatorsPoolConfig) (Colla
 	go func() {
 		wg.Wait()
 		close(ch)
-		log.Printf("Fetched collator pool in %vsecs\n", float64(time.Now().UnixMilli()-start)/1000.0)
+		log.Printf("Fetched collators in %vsecs\n", float64(time.Now().UnixMilli()-start)/1000.0)
 	}()
 	// Collect
 	result := make([]CollatorInfo, 0)
 	for r := range ch {
+		if len(result) > 1 && len(result)%10 == 0 {
+			log.Printf("Fetched %v/%v collators in %vsecs",
+				len(result), len(addresses), float64(time.Now().UnixMilli()-start)/1000.0)
+		}
 		if r.Err != nil {
 			log.Printf("Unable to fetch collator info %v\n", r.Err)
 			return CollatorPool{}, nil
@@ -239,12 +243,21 @@ func (c *Client) FetchCollatorInfo(
 	rank uint32,
 	cfg config.CollatorsPoolConfig,
 ) (CollatorInfo, error) {
+	s := time.Now().UnixMilli()
+	type collatorPerf struct {
+		AccountInfo float32
+		History     float32
+		Points      float32
+		Delegations float32
+	}
+	t := collatorPerf{}
 	account, _ := types.HexDecodeString(address)
 	var candidate candidateMetadataUnmarshal
-	err := c.GetStorageRaw(
+	err := c.GetStorageRawAt(
 		"ParachainStaking",
 		"CandidateInfo",
 		"CandidateMetadata<Balance>",
+		c.SnapBlock.Hash,
 		&candidate,
 		account,
 	)
@@ -256,16 +269,19 @@ func (c *Client) FetchCollatorInfo(
 	if err != nil {
 		return CollatorInfo{}, err
 	}
+	t.AccountInfo = float32(time.Now().UnixMilli()-s) / 1000.0
 	// Get historyRounds
 	history, err := c.FetchCollatorHistory(address, cfg.HistoryRounds)
 	if err != nil {
 		return CollatorInfo{}, err
 	}
+	t.History = float32(time.Now().UnixMilli()-s) / 1000.0
 	// Get current points
 	blocks, err := c.FetchCollatorBlocks(address, c.SnapRound.Number, c.SnapBlock.Hash)
 	if err != nil {
 		return CollatorInfo{}, err
 	}
+	t.Points = float32(time.Now().UnixMilli()-s) / 1000.0
 	// Get amount from pool to avoid bugs in the candidate info data as happened in the past
 	pool, err := c.FetchSortedCandidatePool(c.SnapBlock.Hash)
 	if err != nil {
@@ -284,10 +300,11 @@ func (c *Client) FetchCollatorInfo(
 		var delegations struct {
 			Delegations []candidateDelegationUnmarshal
 		}
-		err = c.GetStorageRaw(
+		err = c.GetStorageRawAt(
 			"ParachainStaking",
 			"TopDelegations",
 			"Delegations<Balance>",
+			c.SnapBlock.Hash,
 			&delegations,
 			account,
 		)
@@ -300,12 +317,10 @@ func (c *Client) FetchCollatorInfo(
 		for _, delegation := range delegations.Delegations {
 			wg.Add(1)
 			delegator := delegation.Owner
+			amount := delegation.Amount
 			go func() {
 				defer wg.Done()
-				ch <- async.ResultFrom(c.FetchDelegatorState(
-					address,
-					delegator,
-				))
+				ch <- async.ResultFrom(c.FetchDelegatorState(address, delegator, amount))
 			}()
 		}
 		// Wait channel
@@ -326,6 +341,8 @@ func (c *Client) FetchCollatorInfo(
 		})
 	}
 	// Done
+	t.Delegations = float32(time.Now().UnixMilli()-s) / 1000.0
+	log.Printf("%v: %v", address, t)
 	return CollatorInfo{
 		Address:     address,
 		Selected:    selected,

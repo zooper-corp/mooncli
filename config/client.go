@@ -28,14 +28,14 @@ type SnapConfig struct {
 	TargetRound uint32
 }
 
-// MinCacheTTL Duration the minimum time an object is valid, this is usually 2 * block length
+// MinCacheTTL Duration the minimum time an object is valid
 func MinCacheTTL() time.Duration {
-	return 24 * time.Second
+	return time.Duration(120) * time.Second
 }
 
 // DefaultCacheTTL Duration the default time an object is valid (this expects object to be requested with hash)
 func DefaultCacheTTL() time.Duration {
-	return 24 * time.Hour
+	return time.Duration(24) * time.Hour
 }
 
 // GetDefaultChainConfig ChainConfig default values, main network

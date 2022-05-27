@@ -97,7 +97,7 @@ func ServeChainData(config config.HttpConfig) {
 		panic(err)
 	}
 	// First update
-	err = chainData.Update()
+	err = chainData.Update(0)
 	if err != nil {
 		panic(err)
 	}
@@ -108,7 +108,7 @@ func ServeChainData(config config.HttpConfig) {
 		for {
 			select {
 			case <-ticker.C:
-				_ = chainData.Update()
+				_ = chainData.Update(28)
 			case <-quit:
 				ticker.Stop()
 				return

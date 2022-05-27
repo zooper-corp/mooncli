@@ -195,7 +195,7 @@ func (c *Client) GetStorageRawAt(
 	args ...[]byte,
 ) error {
 	cacheTtl := config.DefaultCacheTTL()
-	cacheKey := fmt.Sprintf("%v.%v(%v)@%v", pallet, method, args, blockHash)
+	cacheKey := fmt.Sprintf("%v.%v(%v)@%v", pallet, method, args, blockHash.Hex())
 	return c.getStorage(pallet, method, typeString, blockHash, cacheTtl, cacheKey, targetValue, args...)
 }
 
@@ -238,6 +238,7 @@ func (c *Client) getStorage(
 		if err == nil {
 			return nil
 		}
+		log.Printf("Cache err %v:%v key %v", pallet, method, cacheKey)
 	}
 	r, err := c.getStorageData(pallet, method, blockHash, args...)
 	if err != nil {
@@ -248,12 +249,12 @@ func (c *Client) getStorage(
 	if err != nil {
 		return err
 	}
-	// Cache
-	c.setCache(cacheKey, j, cacheTtl)
 	err = json.Unmarshal(j, targetValue)
 	if err != nil {
 		return err
 	}
+	// Cache
+	c.setCache(cacheKey, j, cacheTtl)
 	return nil
 }
 

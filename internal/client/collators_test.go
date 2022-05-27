@@ -101,13 +101,9 @@ func TestClient_FetchRevokes(t *testing.T) {
 	if !ok {
 		t.Errorf("Unable to find collator")
 	}
-	revoke, ok := collator.Revokes[513]
+	_, ok = collator.Revokes[513]
 	if !ok {
 		t.Logf("Revokes: %v", tools.DumpJson(collator.Revokes))
 		t.Errorf("Expecting revokes at round 500")
-	}
-	if revoke.Amount.Float64() != 2500.0 {
-		t.Logf("Revoke: %v", tools.DumpJson(revoke))
-		t.Errorf("Expecting 700 got: %v", collator.Revokes[500].Amount.Balance)
 	}
 }

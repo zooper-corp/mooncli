@@ -7,18 +7,6 @@ import (
 	"strings"
 )
 
-type delegationRequestUnmarshal struct {
-	Collator string
-	Amount   TokenAmount
-	Round    uint32
-	Action   ScaleEnum
-}
-
-type delegationRequestMapUnmarshal struct {
-	Collator string
-	Request  delegationRequestUnmarshal
-}
-
 type delegationScheduledRequestsUnmarshal struct {
 	Delegator string
 	Round     uint32
@@ -30,28 +18,6 @@ type candidateDelegationUnmarshal struct {
 	Amount TokenAmount
 }
 
-type delegationRequestsUnmarshal struct {
-	Count    uint32
-	Requests []delegationRequestMapUnmarshal
-	Total    TokenAmount
-}
-
-type delegatorStateUnmarshal struct {
-	Id          string
-	Delegations []candidateDelegationUnmarshal
-	Total       TokenAmount
-	Requests    delegationRequestsUnmarshal
-	Status      ScaleEnum
-}
-
-type delegatorStateUnmarshalV1500 struct {
-	Id          string
-	Delegations []candidateDelegationUnmarshal
-	Total       TokenAmount
-	LessTotal   TokenAmount
-	Status      ScaleEnum
-}
-
 type DelegatorState struct {
 	Address      string       `json:"address"`
 	Amount       TokenBalance `json:"amount"`
@@ -60,34 +26,15 @@ type DelegatorState struct {
 	RevokeRound  uint32       `json:"revoke_round,omitempty"`
 }
 
-func (c *Client) FetchDelegatorState(collator string, address string) (DelegatorState, error) {
-	delegatorAccount, _ := types.HexDecodeString(address)
+func (c *Client) FetchDelegatorState(collator string, address string, total TokenAmount) (DelegatorState, error) {
 	collatorAccount, _ := types.HexDecodeString(collator)
-	var delegator delegatorStateUnmarshalV1500
-	err := c.GetStorageRaw(
-		"ParachainStaking",
-		"DelegatorState",
-		"DelegatorState<Balance>",
-		&delegator,
-		delegatorAccount,
-	)
-	if err != nil {
-		log.Printf("Unable to decode delegator state for %v\n", address)
-		return DelegatorState{}, err
-	}
-	// Fetch collator relative data
-	totalDelegated := big.NewInt(0)
-	for _, delegation := range delegator.Delegations {
-		if strings.EqualFold(delegation.Owner, collator) {
-			totalDelegated.Add(totalDelegated, delegation.Amount.AsBigInt())
-		}
-	}
 	// Fetch revokes for collator
 	requests := make([]delegationScheduledRequestsUnmarshal, 0)
-	err = c.GetStorageRaw(
+	err := c.GetStorageRawAt(
 		"ParachainStaking",
 		"DelegationScheduledRequests",
 		"Vec<DelegationScheduledRequests<DelegatorState<Balance>>>",
+		c.SnapBlock.Hash,
 		&requests,
 		collatorAccount,
 	)
@@ -113,7 +60,7 @@ func (c *Client) FetchDelegatorState(collator string, address string) (Delegator
 		Address: address,
 		Amount: TokenBalance{
 			info:    &c.TokenInfo,
-			Balance: &TokenAmount{totalDelegated},
+			Balance: &TokenAmount{total.AsBigInt()},
 		},
 		RevokeAmount: revokeAmount.AsBalance(&c.TokenInfo),
 		RevokeReason: revokeReason,

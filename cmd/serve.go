@@ -6,6 +6,7 @@ import (
 	"github.com/zooper-corp/mooncli/internal/server"
 	"github.com/zooper-corp/mooncli/internal/tools"
 	"log"
+	"runtime"
 	"time"
 )
 
@@ -14,6 +15,7 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Serve collator and delegator data JSON via API server",
 	Run: func(cmd *cobra.Command, args []string) {
+		runtime.GOMAXPROCS(1)
 		chain, _ := cmd.Root().Flags().GetString("chain")
 		interval, _ := cmd.Flags().GetUint32("interval")
 		listen, _ := cmd.Flags().GetString("listen")

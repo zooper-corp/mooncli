@@ -65,7 +65,7 @@ func NewChainData(chainConfig config.ChainConfig, maxUpdateDelta time.Duration) 
 	}, nil
 }
 
-func (c *ChainData) Update() error {
+func (c *ChainData) Update(historyRounds uint32) error {
 	if c.updateLock.TryLock() {
 		start := time.Now().UnixMilli()
 		// Create basic client
@@ -76,9 +76,9 @@ func (c *ChainData) Update() error {
 			return err
 		}
 		// Fetch collator pool
-		log.Printf("Fetching collator pool history:%v revokes:%v\n", 28, true)
+		log.Printf("Fetching collator pool history:%v revokes:%v\n", historyRounds, true)
 		collatorPool, err := chainClient.FetchCollatorPool(config.CollatorsPoolConfig{
-			HistoryRounds: 28,
+			HistoryRounds: historyRounds,
 			Revokes:       true,
 		})
 		if err != nil {

@@ -3,6 +3,7 @@ package client
 import (
 	"github.com/zooper-corp/mooncli/config"
 	"github.com/zooper-corp/mooncli/internal/tools"
+	"math/big"
 	"testing"
 )
 
@@ -13,6 +14,7 @@ func TestFetchDelegatorInfo(t *testing.T) {
 	delegator, err := c.FetchDelegatorState(
 		"0xca98d4378393040408100f490bf98b03f5e7deb7",
 		"0x4b5788f50e44e593c7bd92eb66fa59600baa9432",
+		TokenAmount{big.NewInt(0)},
 	)
 	if err != nil {
 		t.Logf("Client: %v", tools.DumpJson(c.SnapBlock))
@@ -28,6 +30,7 @@ func TestClient_FetchDelegatorState(t *testing.T) {
 	delegator, err := c.FetchDelegatorState(
 		"0x3f0937BdEF510fd1D39F76CF41a7A4CFbf8ab876",
 		"0x728507eC8f967BCB5fAFF3D238059cE1eb99b828",
+		TokenAmount{big.NewInt(0)},
 	)
 	if err != nil {
 		t.Logf("Client: %v", tools.DumpJson(c.SnapBlock))
@@ -43,6 +46,7 @@ func TestClient_FetchDelegatorStateV1500(t *testing.T) {
 	delegator, err := c.FetchDelegatorState(
 		"0x7aF6c67EE0F1eC83C3d05e62fB0200B3841c7F36",
 		"0xB1e6c73EA591C3d1cE112f428B33850E7158fe22",
+		TokenAmount{big.NewInt(0)},
 	)
 	if err != nil {
 		t.Logf("Client: %v", tools.DumpJson(c.SnapBlock))
