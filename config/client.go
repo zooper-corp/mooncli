@@ -87,6 +87,8 @@ func extractDefaultRpcUrl(endpoint string) []string {
 		return []string{
 			"wss://moonbeam.api.onfinality.io/public-ws",
 			"wss://wss.api.moonbeam.network",
+			"wss://moonbeam.public.blastapi.io",
+			"wss://moonbeam-rpc.dwellir.com",
 		}
 	case "moonriver":
 		return []string{
