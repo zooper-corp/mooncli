@@ -243,14 +243,6 @@ func (c *Client) FetchCollatorInfo(
 	rank uint32,
 	cfg config.CollatorsPoolConfig,
 ) (CollatorInfo, error) {
-	s := time.Now().UnixMilli()
-	type collatorPerf struct {
-		AccountInfo float32
-		History     float32
-		Points      float32
-		Delegations float32
-	}
-	t := collatorPerf{}
 	account, _ := types.HexDecodeString(address)
 	var candidate candidateMetadataUnmarshal
 	err := c.GetStorageRawAt(
@@ -269,19 +261,16 @@ func (c *Client) FetchCollatorInfo(
 	if err != nil {
 		return CollatorInfo{}, err
 	}
-	t.AccountInfo = float32(time.Now().UnixMilli()-s) / 1000.0
 	// Get historyRounds
 	history, err := c.FetchCollatorHistory(address, cfg.HistoryRounds)
 	if err != nil {
 		return CollatorInfo{}, err
 	}
-	t.History = float32(time.Now().UnixMilli()-s) / 1000.0
 	// Get current points
 	blocks, err := c.FetchCollatorBlocks(address, c.SnapRound.Number, c.SnapBlock.Hash)
 	if err != nil {
 		return CollatorInfo{}, err
 	}
-	t.Points = float32(time.Now().UnixMilli()-s) / 1000.0
 	// Get amount from pool to avoid bugs in the candidate info data as happened in the past
 	pool, err := c.FetchSortedCandidatePool(c.SnapBlock.Hash)
 	if err != nil {
@@ -297,52 +286,12 @@ func (c *Client) FetchCollatorInfo(
 	// Get delegations if requested
 	cd := make([]DelegatorState, 0)
 	if cfg.Revokes {
-		var delegations struct {
-			Delegations []candidateDelegationUnmarshal
-		}
-		err = c.GetStorageRawAt(
-			"ParachainStaking",
-			"TopDelegations",
-			"Delegations<Balance>",
-			c.SnapBlock.Hash,
-			&delegations,
-			account,
-		)
+		cd, err = c.getDelegations(address)
 		if err != nil {
-			log.Printf("Cannot load delegations %v\n", err)
+			return CollatorInfo{}, err
 		}
-		// Fetch delegations
-		ch := make(chan async.Result[DelegatorState])
-		var wg sync.WaitGroup
-		for _, delegation := range delegations.Delegations {
-			wg.Add(1)
-			delegator := delegation.Owner
-			amount := delegation.Amount
-			go func() {
-				defer wg.Done()
-				ch <- async.ResultFrom(c.FetchDelegatorState(address, delegator, amount))
-			}()
-		}
-		// Wait channel
-		go func() {
-			wg.Wait()
-			close(ch)
-		}()
-		for r := range ch {
-			if r.Err != nil {
-				log.Printf("Unable to fetch delegator state %v\n", r.Err)
-			} else {
-				cd = append(cd, r.Value)
-			}
-		}
-		// Sort
-		sort.Slice(cd[:], func(i, j int) bool {
-			return cd[i].Amount.Balance.Cmp(cd[j].Amount.Balance) == 1
-		})
 	}
 	// Done
-	t.Delegations = float32(time.Now().UnixMilli()-s) / 1000.0
-	log.Printf("%v: %v", address, t)
 	return CollatorInfo{
 		Address:     address,
 		Selected:    selected,

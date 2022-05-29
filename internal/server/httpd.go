@@ -97,7 +97,7 @@ func ServeChainData(config config.HttpConfig) {
 		panic(err)
 	}
 	// First update
-	err = chainData.Update(0)
+	err = chainData.Update(28)
 	if err != nil {
 		panic(err)
 	}
