@@ -6,6 +6,7 @@ import (
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"math"
 	"math/big"
+	"strconv"
 	"strings"
 )
 
@@ -93,4 +94,23 @@ func (tb TokenBalance) MarshalJSON() ([]byte, error) {
 	} else {
 		return json.Marshal(0)
 	}
+}
+
+func (tb *TokenBalance) UnmarshalJSON(p []byte) error {
+	ti := GlobalTokenInfo
+	if string(p) == "null" {
+		return nil
+	}
+	f, err := strconv.ParseFloat(string(p), 64)
+	if err != nil {
+		return err
+	}
+	fe := new(big.Float).SetFloat64(f)
+	tc := new(big.Float).SetFloat64(math.Pow10(int(ti.TokenDecimals)))
+	r := new(big.Float).Mul(fe, tc)
+	z := new(big.Int)
+	result, _ := r.Int(z)
+	tb.Balance = &TokenAmount{result}
+	tb.info = &ti
+	return nil
 }

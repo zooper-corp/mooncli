@@ -1,11 +1,14 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/OrlovEvgeny/go-mcache"
 	"github.com/zooper-corp/mooncli/config"
 	"github.com/zooper-corp/mooncli/internal/client"
+	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -65,8 +68,74 @@ func NewChainData(chainConfig config.ChainConfig, maxUpdateDelta time.Duration) 
 	}, nil
 }
 
+func (c *ChainData) UpdateFromJson(jsonPath string) error {
+	if c.updateLock.TryLock() {
+		defer c.updateLock.Unlock()
+		// Load info
+		var chainInfo ChainInfo
+		err := c.readJson(fmt.Sprintf("%s/info.json", jsonPath), &chainInfo)
+		if err != nil {
+			log.Printf("Unable to read info from cache: %v", err)
+			return err
+		}
+		// Load collators
+		client.InitUnmarshalData(chainInfo.TokenInfo)
+		var collatorPool []client.CollatorInfo
+		err = c.readJson(fmt.Sprintf("%s/collators.json", jsonPath), &collatorPool)
+		if err != nil {
+			log.Printf("Unable to read collators from cache %v", err)
+			return err
+		}
+		// Done update backend
+		c.dataLock.Lock()
+		defer c.dataLock.Unlock()
+		c.Info = chainInfo
+		c.Collators = collatorPool
+		// Finished
+		log.Printf("Chain data loaded from JSON: %v", time.UnixMilli(int64(chainInfo.Update.TsSecs*1000)))
+		return nil
+	}
+	return fmt.Errorf("unable to get data lock")
+}
+
+func (c *ChainData) readJson(jsonPath string, target interface{}) error {
+	jsonFile, err := os.Open(jsonPath)
+	if err != nil {
+		log.Printf("Unable to load JSON from %v: %v", jsonPath, err)
+		return err
+	}
+	defer func(jsonFile *os.File) {
+		_ = jsonFile.Close()
+	}(jsonFile)
+	byteValue, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		log.Printf("Unable to read JSON from %v: %v", jsonPath, err)
+		return err
+	}
+	err = json.Unmarshal(byteValue, target)
+	return err
+}
+
+func (c *ChainData) StoreToJson(jsonPath string) error {
+	file, err := json.MarshalIndent(c.Info, "", " ")
+	err = ioutil.WriteFile(fmt.Sprintf("%s/info.json", jsonPath), file, 0644)
+	if err != nil {
+		log.Printf("Unable to write JSON to %v: %v", jsonPath, err)
+		return err
+	}
+	file, err = json.MarshalIndent(c.Collators, "", " ")
+	err = ioutil.WriteFile(fmt.Sprintf("%s/collators.json", jsonPath), file, 0644)
+	if err != nil {
+		log.Printf("Unable to write JSON to %v: %v", jsonPath, err)
+		return err
+	}
+	log.Printf("Data stored to JSON cache")
+	return err
+}
+
 func (c *ChainData) Update(historyRounds uint32) error {
 	if c.updateLock.TryLock() {
+		defer c.updateLock.Unlock()
 		start := time.Now().UnixMilli()
 		// Create basic client
 		log.Printf("Starting update")
@@ -97,7 +166,6 @@ func (c *ChainData) Update(historyRounds uint32) error {
 		// Done update backend
 		c.dataLock.Lock()
 		defer c.dataLock.Unlock()
-		defer c.updateLock.Unlock()
 		updateTime := uint32(time.Now().UnixMilli() - start)
 		c.Info = ChainInfo{
 			Server: "MoonCli by 🛸 Zooper Corp 🛸",

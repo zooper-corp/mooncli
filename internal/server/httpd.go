@@ -91,15 +91,37 @@ func handleJsonResponse(w http.ResponseWriter, data any) {
 func ServeChainData(config config.HttpConfig) {
 	chainData, err := NewChainData(
 		config.ChainConfig,
-		config.UpdateInterval*3/2,
+		config.UpdateInterval*3,
 	)
 	if err != nil {
 		panic(err)
 	}
-	// First update
-	err = chainData.Update(28)
-	if err != nil {
-		panic(err)
+	// First update, with cache check
+	shouldUpdateFromChain := true
+	if config.DataPath != "" {
+		err := chainData.UpdateFromJson(config.DataPath)
+		if err == nil {
+			shouldUpdateFromChain = false
+		}
+	}
+	if shouldUpdateFromChain {
+		retry := 0
+		for {
+			err = chainData.Update(28)
+			if err != nil {
+				if retry > 3 {
+					panic(err)
+				}
+				log.Printf("Unable to update, waiting to retry...")
+				retry = retry + 1
+				time.Sleep(time.Second * 10)
+			} else {
+				if config.DataPath != "" {
+					_ = chainData.StoreToJson(config.DataPath)
+				}
+				break
+			}
+		}
 	}
 	// Start update routine
 	ticker := time.NewTicker(config.UpdateInterval)
@@ -108,7 +130,10 @@ func ServeChainData(config config.HttpConfig) {
 		for {
 			select {
 			case <-ticker.C:
-				_ = chainData.Update(28)
+				err = chainData.Update(28)
+				if err == nil && config.DataPath != "" {
+					_ = chainData.StoreToJson(config.DataPath)
+				}
 			case <-quit:
 				ticker.Stop()
 				return
@@ -125,5 +150,6 @@ func ServeChainData(config config.HttpConfig) {
 	// Delegations
 	http.Handle("/delegations/", gziphandler.GzipHandler(http.HandlerFunc(chainData.HandleDelegations)))
 	// Start engine
+	log.Printf("Starting web server at %v", config.Addr)
 	log.Fatal(http.ListenAndServe(config.Addr, nil))
 }

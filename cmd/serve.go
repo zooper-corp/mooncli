@@ -19,10 +19,12 @@ var serveCmd = &cobra.Command{
 		chain, _ := cmd.Root().Flags().GetString("chain")
 		interval, _ := cmd.Flags().GetUint32("interval")
 		listen, _ := cmd.Flags().GetString("listen")
+		dataPath, _ := cmd.Flags().GetString("data-path")
 		httpConfig := config.HttpConfig{
 			Addr:           listen,
 			UpdateInterval: time.Duration(interval) * time.Second,
 			ChainConfig:    config.GetChainConfig(chain, 0, 0),
+			DataPath:       dataPath,
 		}
 		log.Printf("Starting API server %v", tools.DumpJson(httpConfig))
 		server.ServeChainData(httpConfig)
@@ -41,5 +43,10 @@ func init() {
 		"listen",
 		httpConfig.Addr,
 		"Listen address",
+	)
+	serveCmd.PersistentFlags().String(
+		"data-path",
+		"",
+		"An optional data path, if provided update data will be cached there",
 	)
 }
