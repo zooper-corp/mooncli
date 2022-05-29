@@ -201,10 +201,6 @@ func (c *Client) FetchCollatorPool(poolConfig config.CollatorsPoolConfig) (Colla
 	// Collect
 	result := make([]CollatorInfo, 0)
 	for r := range ch {
-		if len(result) > 1 && len(result)%10 == 0 {
-			log.Printf("Fetched %v/%v collators in %vsecs",
-				len(result), len(addresses), float64(time.Now().UnixMilli()-start)/1000.0)
-		}
 		if r.Err != nil {
 			log.Printf("Unable to fetch collator info %v\n", r.Err)
 			return CollatorPool{}, nil
