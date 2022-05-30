@@ -57,3 +57,9 @@ through a small API, endpoints provided will be:
   - **/collators/address** chain pool ranking for a given collator
   - **/delegations/address** delegations for a given delegator or collator
   - **/healthz** will return 5XX if last update was more than 1.5 times the interval
+
+### Docker
+A ready made Docker image is available at Docker hub, just do:
+```bash
+docker pull johnuopini/mooncli:latest
+```
