@@ -36,10 +36,7 @@ func (to *TableOptions) GetTableWidth() int {
 }
 
 func (to *TableOptions) GetSortMode() table.SortMode {
-	if strings.EqualFold(to.SortKey, "rank") ||
-		strings.EqualFold(to.SortKey, "balance") ||
-		strings.EqualFold(to.SortKey, "blocks") ||
-		strings.EqualFold(to.SortKey, "blocks avg") {
+	if !strings.EqualFold(to.SortKey, "display") {
 		if to.SortDesc {
 			return table.DscNumeric
 		} else {

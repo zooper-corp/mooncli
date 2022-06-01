@@ -8,6 +8,7 @@ import (
 	"github.com/zooper-corp/mooncli/internal/client"
 	"github.com/zooper-corp/mooncli/internal/tools"
 	"os"
+	"strings"
 )
 
 func DumpTable(data client.CollatorPool, client *client.Client, options config.TableOptions) {
@@ -52,7 +53,7 @@ func DumpTable(data client.CollatorPool, client *client.Client, options config.T
 		{
 			Name: "Display",
 			Transformer: func(val interface{}) string {
-				return val.(string)
+				return strings.Trim(val.(string), " ")
 			},
 		},
 		{Name: "Rank"},
@@ -61,9 +62,9 @@ func DumpTable(data client.CollatorPool, client *client.Client, options config.T
 		{Name: "Blocks"},
 		{Name: "Blocks Avg", Hidden: options.Compact},
 		{Name: "Balance", Hidden: options.Compact},
-		{Name: "Revoke Counted", Hidden: options.Compact},
-		{Name: "Revoke Delta", Hidden: options.Compact},
-		{Name: "Revoke Rank", Hidden: options.Compact},
+		{Name: "New Counted", Hidden: options.Compact},
+		{Name: "New Delta", Hidden: options.Compact},
+		{Name: "New Rank", Hidden: options.Compact},
 	}
 	t.SetColumnConfigs(cc)
 	// Add rows
@@ -96,6 +97,18 @@ func DumpTable(data client.CollatorPool, client *client.Client, options config.T
 	}
 	// Sort and render
 	t.SetAllowedRowLength(options.GetTableWidth())
-	t.SortBy([]table.SortBy{{Name: options.GetSortKey(), Mode: options.GetSortMode()}})
+	sortIndex := 2
+	if options.GetSortKey() != "" {
+		sk := strings.ReplaceAll(options.GetSortKey(), " ", "")
+		for i, c := range cc {
+			k := strings.ReplaceAll(c.Name, " ", "")
+			if strings.EqualFold(sk, k) {
+				sortIndex = i + 1
+				break
+			}
+		}
+	}
+	println(sortIndex)
+	t.SortBy([]table.SortBy{{Number: sortIndex, Mode: options.GetSortMode()}})
 	t.Render()
 }
