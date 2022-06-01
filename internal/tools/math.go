@@ -16,13 +16,17 @@ func Min[T constraints.Ordered](a, b T) T {
 func Humanize(v float64) string {
 	switch {
 	case v > math.Pow10(6):
-		return fmt.Sprintf("%.1fM", v/math.Pow10(6))
+		return fmt.Sprintf("%sM", Humanize(v/math.Pow10(6)))
 	case v > math.Pow10(3):
-		return fmt.Sprintf("%.1fK", v/math.Pow10(3))
-	case v > math.Pow10(2):
-		return fmt.Sprintf("%.1f", v)
+		return fmt.Sprintf("%sK", Humanize(v/math.Pow10(3)))
 	case v == math.Round(v):
 		return fmt.Sprintf("%.0f", v)
+	case v > math.Pow10(2):
+		return fmt.Sprintf("%.0f", v)
+	case v > math.Pow10(1):
+		return fmt.Sprintf("%.1f", v)
+	case v > 1:
+		return fmt.Sprintf("%.2f", v)
 	case v < 1:
 		return fmt.Sprintf("%.3f", v)
 	default:
