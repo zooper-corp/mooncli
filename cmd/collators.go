@@ -24,10 +24,12 @@ var collatorsTableCmd = &cobra.Command{
 		compact, _ := cmd.Flags().GetBool("compact")
 		sortKey, _ := cmd.Flags().GetString("sort-key")
 		sortDesc, _ := cmd.Flags().GetBool("sort-desc")
+		revokeRounds, _ := cmd.Flags().GetUint32("revoke-rounds")
 		options := config.TableOptions{
-			Compact:  compact,
-			SortKey:  sortKey,
-			SortDesc: sortDesc,
+			Compact:      compact,
+			SortKey:      sortKey,
+			SortDesc:     sortDesc,
+			RevokeRounds: revokeRounds,
 		}
 		data, client := fetchPool(cmd)
 		display.DumpTable(data, client, options)
