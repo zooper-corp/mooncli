@@ -108,7 +108,6 @@ func DumpTable(data client.CollatorPool, client *client.Client, options config.T
 			}
 		}
 	}
-	println(sortIndex)
 	t.SortBy([]table.SortBy{{Number: sortIndex, Mode: options.GetSortMode()}})
 	t.Render()
 }
