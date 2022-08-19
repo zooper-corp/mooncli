@@ -88,7 +88,7 @@ func DumpTable(data client.CollatorPool, client *client.Client, options config.T
 			fmt.Sprintf("%v", info.History[data.RoundNumber].Blocks),
 			fmt.Sprintf("%.1f", info.AverageBlocks()),
 			// Balance
-			tools.Humanize(info.Balance.Free.Float64()),
+			tools.Humanize(info.Balance.GetTransferableBalance().Float64()),
 			// Revokes
 			tools.Humanize(info.RevokeAt(revokeRound).Counted.Float64()),
 			tools.Humanize(info.Counted.Float64() - info.RevokeAt(revokeRound).Counted.Float64()),
