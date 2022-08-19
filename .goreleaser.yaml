@@ -22,8 +22,6 @@ dockers:
     image_templates:
       - "johnuopini/mooncli:{{ .Tag }}"
       - "johnuopini/mooncli:latest"
-      - "ghcr.io/zooper-corp/mooncli:{{ .Tag }}"
-      - "ghcr.io/zooper-corp/mooncli:latest"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
